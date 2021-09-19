@@ -8,7 +8,7 @@ Fill in the necessary environment variables:
 cp .env.dist .env
 ```
 
-Configure web server to proxy 
+Configure web server to proxy requests
 
 Run bundler to install dependencies:
 ```

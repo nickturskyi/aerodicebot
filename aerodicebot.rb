@@ -4,6 +4,8 @@ require 'logger'
 require 'rack'
 require 'telegram/bot'
 require 'json'
+require 'rvg/rvg'
+require 'tempfile'
 
 # TODO add recipe to favorites (with notes)
 
@@ -55,6 +57,52 @@ class Recipe
     recipe.push "Push."
 
     recipe.join("\n")
+  end
+
+  def draw_card(canvas, caption, value, unit)
+    canvas.rect(300,200).styles(:stroke=>'black', :fill=>'none')
+    canvas.text(150,40).tspan(caption).styles(:text_anchor=>'middle', :font_size=>20, :font_family=>'Helvetica', :fill=>'black')
+    canvas.text(150,160) do |_ts|
+      _ts.tspan(value).styles(:text_anchor=>'middle', :font_size=>120, :font_family=>'Helvetica', :fill=>'black', :font_weight=>'bold')
+      _ts.tspan(unit).styles(:text_anchor=>'start', :font_size=>20, :font_family=>'Helvetica', :fill=>'black')
+    end
+  end
+
+  def to_png
+    # TODO I should only be defining the tile size and padding - all the rest can be calculated
+
+    Magick::RVG::dpi = 144
+
+    rvg = Magick::RVG.new(940, 430) do |canvas|
+      canvas.background_fill = 'white'
+
+      # Water volume
+      draw_card(canvas.g.translate(10,10), "water volume", @water_ml, "ml")
+
+      # Water temp
+      draw_card(canvas.g.translate(320,10), "water temp", @brew_temp, "°C")
+
+      # Brew time
+      draw_card(canvas.g.translate(630,10), "brew time", @brew_time, "s")
+
+      # Coffee volume
+      draw_card(canvas.g.translate(10,220), "dose", @coffee_g, "g")
+
+      # Grind size
+      canvas.g.translate(320,220) do |_gs|
+        _gs.rect(300,200).styles(:stroke=>'black', :fill=>'none')
+        _gs.text(150,40).tspan("grind size").styles(:text_anchor=>'middle', :font_size=>20, :font_family=>'Helvetica', :fill=>'black')
+        _gs.text(150,160).tspan(@grind.capitalize).styles(:text_anchor=>'middle', :font_size=>80, :font_family=>'Helvetica', :fill=>'black', :font_weight=>'bold')
+      end
+
+      # Bloom time
+      draw_card(canvas.g.translate(630,220), "bloom water volume", @bloom_ml, "ml")
+    end
+
+    png_file = Tempfile.new(['aerodiceroll', '.png'])
+    rvg.draw.write(png_file.path)
+
+    png_file
   end
 end
 
@@ -120,11 +168,19 @@ class WebhooksController < Telegram::Bot::UpdatesController
     respond_with :message, text: 'Hey there! For a random aeropress recipe, do a /roll'
   end
 
+  def recipe!(*)
+    $logger.debug('/recipe called with: ')
+    $logger.debug("from: " + from.to_json) if from
+    $logger.debug("chat: " + chat.to_json) if chat
+    respond_with :message, parse_mode: :Markdown, text: Aerodice.random_recipe.to_markdown
+  end
+
+  # TODO Button with step-by-step instructions
   def roll!(*)
     $logger.debug('/roll called with: ')
     $logger.debug("from: " + from.to_json) if from
     $logger.debug("chat: " + chat.to_json) if chat
-    respond_with :message, parse_mode: :Markdown, text: Aerodice.random_recipe.to_markdown
+    respond_with :photo, photo: Aerodice.random_recipe.to_png
   end
 end
 

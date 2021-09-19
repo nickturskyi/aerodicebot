@@ -26,3 +26,4 @@ Find your bot and send `/roll` command to it
 - Dockerize
 - Add tests
 - Add instructions for web server configuration
+- Example of using

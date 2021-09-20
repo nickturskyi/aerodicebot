@@ -126,7 +126,6 @@ class Aerodice
   CLOCKWISE_STIR_TIMES = [0, 1, 2]
 
   def self.random_recipe
-    # TODO separate generation and formatting
     coffee_to_water = COFFEE_TO_WATER_RATIO.sample
     grind_to_brewtime = GRIND_TO_BREWTIME_RATIO.sample
 
@@ -180,7 +179,9 @@ class WebhooksController < Telegram::Bot::UpdatesController
     $logger.debug('/roll called with: ')
     $logger.debug("from: " + from.to_json) if from
     $logger.debug("chat: " + chat.to_json) if chat
-    respond_with :photo, photo: Aerodice.random_recipe.to_png
+    recipe_png = Aerodice.random_recipe.to_png
+    respond_with :photo, photo: recipe_png
+    recipe_png.unlink
   end
 end
 

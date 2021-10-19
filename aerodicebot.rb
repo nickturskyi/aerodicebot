@@ -70,6 +70,7 @@ class Recipe
 
   def to_png
     # TODO I should only be defining the tile size and padding - all the rest can be calculated
+    # TODO use SVG template and fill it in with the values
 
     Magick::RVG::dpi = 144
 

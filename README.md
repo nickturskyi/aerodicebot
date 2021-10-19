@@ -20,19 +20,26 @@ location /tgbot {
 }
 ```
 
-# Run bundler to install dependencies:
+# Build container image
 ```
-bundle install
+docker build -t aerodicebot .
 ```
 
-# Run the app:
+# Launch the container
 ```
-rackup
+docker run \
+  --name aerodicebot \
+  --publish 127.0.0.1:9292:9292/tcp \
+  --restart always \
+  --detach \
+  -t -i \
+  aerodicebot:latest
 ```
 
 Find your bot and send `/roll` command to it
 
+Or check out the bot at https://t.me/aerodicebot
+
 ## TODO
-- Dockerize
+- rsyslog from container to the host system
 - Add tests
-- Example of using
